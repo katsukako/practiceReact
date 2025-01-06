@@ -1,8 +1,9 @@
 import { useState } from "react";
 
-function Square({ value, handleClick }) {
+// SquareClass
+function Square({ SquareClass = "square", value, handleClick }) {
   return (
-    <button className="square" onClick={handleClick}>
+    <button className={SquareClass} onClick={handleClick}>
       {value}
     </button>
   );
@@ -26,11 +27,31 @@ function Board({ xIsNext, squares, onPlay }) {
     // 这里把更新的参数传了回去
     onPlay(nextSquares);
   }
+
+  // 判断是否赢了
+  // 找到赢了的旗子
+  // 把旗子状态变成红色突出显示
+
+  // 平局：如果旗子都占满了 但是依然没有赢家 显示平局
+
   // Status Management
-  const winner = calculateWinner(squares);
+  const winner = calculateWinner(squares)?.winnerCalculate;
   let winnerStatus;
+
+  let WinnerLines = [];
+  console.log(squares);
+  // 平手
+
   if (winner) {
     winnerStatus = "Winner:" + winner;
+    WinnerLines = calculateWinner(squares).WinnerLine;
+  } else if (
+    squares.every(
+      (item) => item !== null && item !== undefined && item !== ""
+    ) &&
+    !winner
+  ) {
+    winnerStatus = "EVEN";
   } else {
     winnerStatus = "Next Move:" + (xIsNext ? "x" : "o");
   }
@@ -39,10 +60,17 @@ function Board({ xIsNext, squares, onPlay }) {
   const grid = Array.from({ length: 3 }, (_, rowIndex) => (
     <div key={rowIndex} className="board-row">
       {Array.from({ length: 3 }, (_, colIndex) => {
+        let SquareClass = "square";
         const index = rowIndex * 3 + colIndex;
+        if (WinnerLines.length !== 0) {
+          if (WinnerLines.includes(index)) {
+            SquareClass = "square winner";
+          }
+        }
         return (
           <Square
             key={index}
+            SquareClass={SquareClass}
             value={squares[index]}
             handleClick={() => handleClick(index)}
           />
@@ -72,21 +100,6 @@ function Board({ xIsNext, squares, onPlay }) {
     <>
       <Status status={winnerStatus} />
       {grid}
-      {/* <div className="board-row">
-        <Square value={squares[0]} handleClick={() => handleClick(0)} />
-        <Square value={squares[1]} handleClick={() => handleClick(1)} />
-        <Square value={squares[2]} handleClick={() => handleClick(2)} />
-      </div>
-      <div className="board-row">
-        <Square value={squares[3]} handleClick={() => handleClick(3)} />
-        <Square value={squares[4]} handleClick={() => handleClick(4)} />
-        <Square value={squares[5]} handleClick={() => handleClick(5)} />
-      </div>
-      <div className="board-row">
-        <Square value={squares[6]} handleClick={() => handleClick(6)} />
-        <Square value={squares[7]} handleClick={() => handleClick(7)} />
-        <Square value={squares[8]} handleClick={() => handleClick(8)} />
-      </div> */}
     </>
   );
 }
@@ -125,7 +138,6 @@ export default function Game() {
   const sortedSquares = [...history]
     .map((squares, move) => ({ squares, move }))
     .sort((a, b) => (isUp ? a.move - b.move : b.move - a.move));
-  console.log(sortedSquares);
 
   // 渲染排序后的数组
 
@@ -200,7 +212,7 @@ function calculateWinner(squares) {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+      return { winnerCalculate: squares[a], WinnerLine: lines[i] };
     }
   }
   return null;

@@ -89,3 +89,6 @@ body {
   margin-left: 20px;
 }
 
+.winner {
+  color: red;
+}
